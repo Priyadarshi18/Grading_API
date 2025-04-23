@@ -7,7 +7,7 @@ from PIL import Image
 import google.generativeai as genai
 
 # === Gemini Config ===
-genai.configure(api_key="YOUR_GEMINI_API_KEY")
+genai.configure(api_key="AIzaSyC1MFhWhGuf0Nxl5uT8eJYnClBxMWI78OA")
 
 def remove_shadow_opencv(image_path):
     img = cv2.imread(image_path)
