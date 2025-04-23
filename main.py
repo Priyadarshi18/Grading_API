@@ -12,6 +12,10 @@ from PIL import Image
 
 app = FastAPI()
 
+@app.get("/")
+def root():
+    return {"message": "Text Extraction API is live!"}
+
 @app.post("/extract-text")
 async def extract_text(file: UploadFile = File(...)):
     filename = file.filename
