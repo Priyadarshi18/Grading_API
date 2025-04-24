@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from utils import (
     remove_shadow_opencv_from_image,
     download_image_from_url,
@@ -25,3 +26,17 @@ async def extract_text(image_url: str = Query(..., description="Public URL of th
         return JSONResponse(content={"extracted_text": text})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during text extraction: {e}")
+
+class ImageURLRequest(BaseModel):
+    image_url: str
+
+@app.post("/extract-text")
+async def extract_text_post(payload: ImageURLRequest):
+    try:
+        pil_img = download_image_from_url(payload.image_url)
+        shadow_free_img = remove_shadow_opencv_from_image(pil_img)
+        image_bytes = pil_to_bytes(shadow_free_img)
+        text = extract_text_with_gemini(image_bytes)
+        return JSONResponse(content={"extracted_text": text})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {e}")
