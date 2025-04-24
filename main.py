@@ -1,36 +1,27 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import JSONResponse
-import os
 from utils import (
-    remove_shadow_opencv,
-    convert_pdf_to_image,
+    remove_shadow_opencv_from_image,
+    download_image_from_url,
     pil_to_bytes,
     extract_text_with_gemini
 )
-
 from PIL import Image
+import io
 
 app = FastAPI()
 
-@app.get("/")
-def root():
-    return {"message": "Text Extraction API is live!"}
+@app.get("/extract-text")
+async def extract_text(image_url: str = Query(..., description="Public URL of the image")):
+    try:
+        pil_img = download_image_from_url(image_url)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to download or open image: {e}")
 
-@app.post("/extract-text")
-async def extract_text(file: UploadFile = File(...)):
-    filename = file.filename
-    temp_path = f"temp_{filename}"
-
-    with open(temp_path, "wb") as f:
-        f.write(await file.read())
-
-    if filename.lower().endswith(".pdf"):
-        image = convert_pdf_to_image(temp_path)
-    else:
-        image = remove_shadow_opencv(temp_path)
-
-    image_bytes = pil_to_bytes(image)
-    text = extract_text_with_gemini(image_bytes)
-
-    os.remove(temp_path)
-    return JSONResponse(content={"extracted_text": text})
+    try:
+        shadow_free_img = remove_shadow_opencv_from_image(pil_img)
+        image_bytes = pil_to_bytes(shadow_free_img)
+        text = extract_text_with_gemini(image_bytes)
+        return JSONResponse(content={"extracted_text": text})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during text extraction: {e}")
