@@ -6,3 +6,4 @@ numpy
 PyMuPDF
 google-generativeai
 python-multipart
+requests
