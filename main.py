@@ -1,6 +1,6 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Form, Body
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from typing import Optional
 from utils import (
     remove_shadow_opencv_from_image,
     download_image_from_url,
