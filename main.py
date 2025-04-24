@@ -31,9 +31,17 @@ class ImageURLRequest(BaseModel):
     image_url: str
 
 @app.post("/extract-text")
-async def extract_text_post(payload: ImageURLRequest):
+async def extract_text_post(
+    image_url: Optional[str] = Body(None),
+    image_url_form: Optional[str] = Form(None)
+):
     try:
-        pil_img = download_image_from_url(payload.image_url)
+        # Prioritize JSON body, fallback to form data
+        final_url = image_url or image_url_form
+        if not final_url:
+            raise HTTPException(status_code=400, detail="No image_url provided.")
+
+        pil_img = download_image_from_url(final_url)
         shadow_free_img = remove_shadow_opencv_from_image(pil_img)
         image_bytes = pil_to_bytes(shadow_free_img)
         text = extract_text_with_gemini(image_bytes)
